@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Killer Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f8f9fa;
+        color: #333;
+        text-align: center;
+        padding: 20px;
+    }
+    h1 { color: #2c3e50; }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+    .player {
+        padding: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .enfant { background: #7bed9f; color: #2f3542; }
+    .ado { background: #ffa502; color: #fff; }
+    .adulte { background: #70a1ff; color: #fff; }
+    .player:hover { opacity: 0.8; }
+    .player.done { background: #dfe4ea !important; color: #a4b0be; text-decoration: line-through; }
+    .mission {
+        display: none;
+        margin-top: 20px;
+        padding: 15px;
+        background: #ecf0f1;
+        border-radius: 8px;
+        font-size: 18px;
+    }
+    button {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border: none;
+        background: #2ed573;
+        color: #fff;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    button:hover { background: #1eae60; }
+    #qrcode {
+        margin-top: 30px;
+    }
+</style>
+</head>
+<body>
+<h1>🎯 Jeu Killer</h1>
+<p>Clique sur ton prénom pour voir ta mission secrète !</p>
+
+<div class="grid" id="players"></div>
+
+<div id="missionBox" class="mission"></div>
+
+<div id="qrcode"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// Liste des joueurs avec tranche d'âge corrigée
+const players = [
+    { name:"Johan", age:"adulte" },{ name:"Mathieu", age:"adulte" },{ name:"Coco", age:"adulte" },
+    { name:"Will", age:"adulte" },{ name:"Sandra", age:"adulte" },{ name:"Romain", age:"adulte" },
+    { name:"Christelle", age:"adulte" },{ name:"Clément", age:"adulte" },{ name:"Lulu", age:"adulte" },
+    { name:"Maïté", age:"adulte" },{ name:"Antoine", age:"adulte" },{ name:"Caroline", age:"adulte" },
+    { name:"Suzie", age:"ado" },{ name:"Nathaël", age:"ado" },{ name:"Lola", age:"ado" },
+    { name:"Adel", age:"ado" },{ name:"Ema", age:"ado" },{ name:"Maxine", age:"ado" },
+    { name:"Louise", age:"ado" },{ name:"Victor", age:"ado" },{ name:"Arno", age:"ado" },
+    { name:"Apolline", age:"ado" },{ name:"Martin", age:"enfant" }
+];
+
+// Mélange aléatoire
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+let shuffledPlayers = shuffle([...players]);
+
+// Génération des cibles en boucle
+let targets = [...shuffledPlayers];
+targets.push(targets.shift());
+
+// Missions possibles
+const actions = [
+    "Faire dire le mot **banane** à {target}.",
+    "Faire une danse avec {target}.",
+    "Faire croire à {target} qu'il/elle a quelque chose sur son visage.",
+    "Faire chanter une chanson à {target}.",
+    "Faire rire {target} avec une blague.",
+    "Donner un objet (stylo, cuillère...) à {target} sans qu'il/elle s'en rende compte.",
+    "Demander à {target} de t'apprendre un geste drôle.",
+    "Prendre une photo avec {target} en arrière-plan sans qu'il/elle le sache.",
+    "Faire dire à {target} son animal préféré.",
+    "Demander à {target} son plat préféré et répéter trois fois.",
+    "Convaincre {target} de te prêter un objet qu'il/elle a.",
+    "Faire dire à {target} le mot **supercalifragilistic**.",
+    "Faire croire à {target} qu'il y a un insecte sur lui/elle.",
+    "Faire danser {target} au moins 5 secondes.",
+    "Faire écrire son prénom par {target}.",
+    "Demander à {target} un câlin (sans expliquer pourquoi).",
+    "Faire dire à {target} le mot **abricot**.",
+    "Faire un jeu de pierre-papier-ciseaux avec {target}.",
+    "Obtenir un compliment de {target}.",
+    "Faire répéter un mot trois fois à {target}.",
+    "Faire un check secret avec {target}.",
+    "Apprendre un nouveau mot à {target}.",
+    "Faire raconter une anecdote à {target}.",
+    "Faire dire à {target} le nom de sa couleur préférée.",
+    "Faire dire à {target} « tu as gagné »."
+];
+
+// Associer missions
+const missions = shuffledPlayers.map((player, i) => {
+    let target = targets[i].name;
+    let action = actions[Math.floor(Math.random() * actions.length)];
+    return { player: player.name, age: player.age, mission: action.replace("{target}", target) };
+});
+
+// Affichage des boutons
+const container = document.getElementById("players");
+missions.forEach(m => {
+    let btn = document.createElement("div");
+    btn.className = `player ${m.age}`;
+    btn.innerText = m.player;
+    btn.onclick = () => {
+        document.getElementById("missionBox").innerHTML = `
+            <strong>${m.player}</strong>, ta mission :<br><br>${m.mission}
+            <br><button onclick="markDone('${m.player}')">Mission réussie ✅</button>`;
+        document.getElementById("missionBox").style.display = "block";
+    };
+    container.appendChild(btn);
+});
+
+// Fonction pour griser un joueur
+function markDone(name) {
+    let elems = document.querySelectorAll('.player');
+    elems.forEach(el => {
+        if (el.innerText === name) {
+            el.classList.add("done");
+        }
+    });
+    document.getElementById("missionBox").style.display = "none";
+}
+
+// Générer QR code pour cette page
+new QRCode(document.getElementById("qrcode"), {
+    text: window.location.href,
+    width: 150,
+    height: 150
+});
+</script>
+</body>
+</html>
